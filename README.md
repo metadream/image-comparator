@@ -3,7 +3,7 @@
 ## Demo
 
 ## Usage
-```
+```js
 <link rel="stylesheet" href="image-comparer.css"/>
 <script src="image-comparer.js"></script>
 
