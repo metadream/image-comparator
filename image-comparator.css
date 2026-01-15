@@ -1,8 +1,8 @@
-.image-comparer * {
+.image-comparator * {
     box-sizing: border-box;
 }
 
-.image-comparer {
+.image-comparator {
     position: relative;
     background: #f6f6f6;
     aspect-ratio: 1;
@@ -10,7 +10,7 @@
     overflow: hidden;
 }
 
-.image-comparer.maximized {
+.image-comparator.maximized {
     position: fixed;
     z-index: 999;
     top: 0;
@@ -23,7 +23,7 @@
     aspect-ratio: unset;
 }
 
-.image-comparer .maximized-icon {
+.image-comparator .maximized-icon {
     position: absolute;
     z-index: 998;
     top: 10px;
@@ -37,15 +37,15 @@
     transition: opacity .2s;
 }
 
-.image-comparer .maximized-icon > svg {
+.image-comparator .maximized-icon > svg {
     fill: #fff;
 }
 
-.image-comparer:hover .maximized-icon {
+.image-comparator:hover .maximized-icon {
     opacity: 1 !important;
 }
 
-.image-comparer > img {
+.image-comparator > img {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -53,15 +53,15 @@
     -webkit-user-drag: none;
 }
 
-.image-comparer .left-image {
+.image-comparator .left-image {
     clip-path: inset(0 50% 0 0);
 }
 
-.image-comparer .right-image {
+.image-comparator .right-image {
     clip-path: inset(0 0 0 50%);
 }
 
-.image-comparer .slider-handle {
+.image-comparator .slider-handle {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -73,7 +73,7 @@
     opacity: .8;
 }
 
-.image-comparer .slider-handle:before {
+.image-comparator .slider-handle:before {
     content: "";
     position: absolute;
     top: 50%;

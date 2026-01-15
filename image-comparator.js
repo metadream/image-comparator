@@ -1,14 +1,14 @@
 /**
- * Image Comparer Usage:
- * <div class="image-comparer">
+ * Image Comparator Usage:
+ * <div class="image-comparator">
  *   <img class="left-image" src="before.jpg">
  *   <img class="right-image" src="after.jpg">
  * </div>
  * <script>
- *   new ImageComparer('.image-comparer');
+ *   new ImageComparator('.image-comparator');
  * </script>
  */
-class ImageComparer {
+class ImageComparator {
 
     static MAX_SCALE = 20;
     static SCALE_STEP = 0.2;
@@ -136,9 +136,9 @@ class ImageComparer {
         // 防止页面滚动条跟随滚动
         e.preventDefault();
         // 缩放图像
-        const step = e.wheelDelta > 0 ? ImageComparer.SCALE_STEP : 0 - ImageComparer.SCALE_STEP;
+        const step = e.wheelDelta > 0 ? ImageComparator.SCALE_STEP : 0 - ImageComparator.SCALE_STEP;
         this.scale *= (1 + step);
-        this.scale = Math.max(1, Math.min(this.scale, ImageComparer.MAX_SCALE));
+        this.scale = Math.max(1, Math.min(this.scale, ImageComparator.MAX_SCALE));
         this.transformImages();
         this.checkBoundary();
         this.clipImages();  // 根据缩放后的图像实时裁切图像
