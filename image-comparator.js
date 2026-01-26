@@ -31,7 +31,7 @@ class ImageComparator {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
                     this.getImageDimension(mutation.target).then(d => {
-                        const aspectRatio = d.width / d.height;
+                        const aspectRatio = d.height > 0 ? d.width / d.height : 0;
                         this.container.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
                     });
                 }
@@ -43,7 +43,7 @@ class ImageComparator {
 
         // 容器自适应图像高度
         this.getImageDimension(this.leftImage).then(d => {
-            const aspectRatio = d.width / d.height;
+            const aspectRatio = d.height > 0 ? d.width / d.height : 0;
             this.container.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
         });
 
