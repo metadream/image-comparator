@@ -26,6 +26,12 @@ class ImageComparator {
         this.container.onpointerdown = e => this.dragImages(e);
         this.container.onwheel = e => this.scaleImages(e);
 
+        // 容器自适应图像高度
+        this.getImageDimension(this.leftImage).then(d => {
+            const aspectRatio = d.width / d.height;
+            this.container.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
+        });
+
         // 重置图像位移数据
         this.resetViewport();
         window.addEventListener("resize", () => {
@@ -207,4 +213,21 @@ class ImageComparator {
         this.container.append(this.maximizeIcon);
     }
 
+    /** 获取图片尺寸 */
+    getImageDimension(img) {
+        return new Promise((resolve, reject) => {
+            if (img.complete) {
+                resolve({
+                    width: img.width,
+                    height: img.height
+                });
+            } else {
+                img.onerror = reject;
+                img.onload = () => resolve({
+                    width: img.width,
+                    height: img.height
+                });
+            }
+        });
+    }
 }
