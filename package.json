@@ -1,6 +1,6 @@
 {
   "name": "@metadream/image-comparator",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A lightweight, zero-dependency image comparison slider with zoom and pan support",
   "main": "image-comparator.min.js",
   "files": [
