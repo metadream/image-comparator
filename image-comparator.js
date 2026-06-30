@@ -119,18 +119,21 @@ class ImageComparator {
 
     /** 检查位移边界 */
     checkBoundary() {
-        const { width, height } = this.leftImage.getBoundingClientRect();
+        const img = this.leftImage;
+        const fitScale = Math.min(img.clientWidth / img.naturalWidth, img.clientHeight / img.naturalHeight) || 1;
+        const renderW = img.naturalWidth * fitScale * this.scale;
+        const renderH = img.naturalHeight * fitScale * this.scale;
         const cx = this.viewport.width / 2;
         const cy = this.viewport.height / 2;
         const bound = { x1: 0, x2: 0, y1: 0, y2: 0 };
 
-        if (width > this.viewport.width) {
-            bound.x1 = width / 2 - cx;
-            bound.x2 = bound.x1 - (width - this.viewport.width);
+        if (renderW > this.viewport.width) {
+            bound.x1 = renderW / 2 - cx;
+            bound.x2 = bound.x1 - (renderW - this.viewport.width);
         }
-        if (height > this.viewport.height) {
-            bound.y1 = height / 2 - cy;
-            bound.y2 = bound.y1 - (height - this.viewport.height);
+        if (renderH > this.viewport.height) {
+            bound.y1 = renderH / 2 - cy;
+            bound.y2 = bound.y1 - (renderH - this.viewport.height);
         }
 
         let outOfBounds = false;
