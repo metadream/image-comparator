@@ -38,29 +38,19 @@ new ImageComparator('.image-comparator');
 
 ```js
 new ImageComparator('.image-comparator', {
-  hideMaximizeIcon: false,
+  showMaximizeIcon: false,
   sliderPosition: 50,
+  maxScale: 10,
+  scaleStep: 0.1,
 });
 ```
 
 | 选项 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `hideMaximizeIcon` | `boolean` | `false` | 设为 `true` 隐藏右上角最大化按钮 |
+| `showMaximizeIcon` | `boolean` | `false` | 设为 `true` 显示右上角最大化按钮 |
 | `sliderPosition` | `number` | `50` | 滑动条初始位置（百分比，取值 0–100） |
-
-## 静态属性
-
-在实例化前修改可全局生效：
-
-```js
-ImageComparator.MAX_SCALE = 10;    // 最大缩放倍数，默认 20
-ImageComparator.SCALE_STEP = 0.1;  // 滚轮缩放步进系数，默认 0.2
-```
-
-| 属性 | 默认值 | 说明 |
-|------|--------|------|
-| `ImageComparator.MAX_SCALE` | `20` | 最大缩放倍数 |
-| `ImageComparator.SCALE_STEP` | `0.2` | 每次滚轮事件的缩放步进系数 |
+| `maxScale` | `number` | `20` | 最大缩放倍数 |
+| `scaleStep` | `number` | `0.2` | 每次滚轮事件的缩放步进系数 |
 
 ## 浏览器支持
 
