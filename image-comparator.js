@@ -45,7 +45,11 @@ class ImageComparator {
             const img = this.leftImage;
             const aspectRatio = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 0;
             this.container.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
+            this.resetViewport();
         });
+        if (this.leftImage.complete) {
+            this.leftImage.dispatchEvent(new Event("load"));
+        }
 
         // 重置图像位移数据
         this.resetViewport();
@@ -98,12 +102,9 @@ class ImageComparator {
         return false;
     }
 
-    /** 重置容器和图像中心点 */
+    /** 重置容器视口尺寸 */
     resetViewport() {
         this.viewport = this.container.getBoundingClientRect();
-        const imgRect = this.leftImage.getBoundingClientRect();
-        this.centerX = imgRect.x - this.viewport.x + imgRect.width / 2;
-        this.centerY = imgRect.y - this.viewport.y + imgRect.height / 2;
     }
 
     /** 重置图像 */
@@ -119,14 +120,16 @@ class ImageComparator {
     /** 检查位移边界 */
     checkBoundary() {
         const { width, height } = this.leftImage.getBoundingClientRect();
+        const cx = this.viewport.width / 2;
+        const cy = this.viewport.height / 2;
         const bound = { x1: 0, x2: 0, y1: 0, y2: 0 };
 
         if (width > this.viewport.width) {
-            bound.x1 = width / 2 - this.centerX;
+            bound.x1 = width / 2 - cx;
             bound.x2 = bound.x1 - (width - this.viewport.width);
         }
         if (height > this.viewport.height) {
-            bound.y1 = height / 2 - this.centerY;
+            bound.y1 = height / 2 - cy;
             bound.y2 = bound.y1 - (height - this.viewport.height);
         }
 
