@@ -149,9 +149,9 @@ class ImageComparator {
         this.#maxScale = options.maxScale ?? 20;
         this.#scaleStep = options.scaleStep ?? 0.2;
 
-        this.createSlider();
-        if (this.#showMaximizeIcon) this.createMaximizeIcon();
-        this.#container.onpointerdown = (e) => this.dragImages(e);
+        this.#createSlider();
+        if (this.#showMaximizeIcon) this.#createMaximizeIcon();
+        this.#container.onpointerdown = (e) => this.#dragImages(e);
         this.#container.onwheel = (e) => this.#scaleImages(e);
 
         // 容器自适应图像高度
@@ -159,37 +159,37 @@ class ImageComparator {
             const img = this.#leftImage;
             const aspectRatio = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 0;
             this.#container.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
-            this.resetViewport();
+            this.#resetViewport();
         });
         if (this.#leftImage.complete) {
             this.#leftImage.dispatchEvent(new Event("load"));
         }
 
         // 重置图像位移数据
-        this.resetViewport();
+        this.#resetViewport();
         window.addEventListener("resize", () => {
-            this.resetImages();
+            this.#resetImages();
         });
 
         // 监听退出全屏按键
         window.addEventListener("keyup", (e) => {
             if (e.key === "Escape" && this.#container.classList.contains("maximized")) {
-                this.toggleMaximize();
+                this.#toggleMaximize();
             }
         });
     }
 
     /** 切换最大化 */
-    toggleMaximize() {
+    #toggleMaximize() {
         this.#container.classList.toggle("maximized");
         this.#maximizeIcon.innerHTML = this.#container.classList.contains("maximized")
             ? this.#iconRestore
             : this.#iconMaximize;
-        this.resetImages();
+        this.#resetImages();
     }
 
     /** 拖动图像 */
-    dragImages(e) {
+    #dragImages(e) {
         if (e.button !== 0) return;
         let startX = e.clientX;
         let startY = e.clientY;
@@ -200,8 +200,8 @@ class ImageComparator {
         document.onpointermove = (e) => {
             offsetX = e.clientX - startX;
             offsetY = e.clientY - startY;
-            this.transformImages(this.#transX + offsetX, this.#transY + offsetY, null);
-            this.clipImages(); // 根据位移后的图像实时裁切图像
+            this.#transformImages(this.#transX + offsetX, this.#transY + offsetY, null);
+            this.#clipImages(); // 根据位移后的图像实时裁切图像
         };
 
         document.onpointerup = () => {
@@ -210,29 +210,29 @@ class ImageComparator {
             this.#container.style.cursor = "default";
             this.#transX += offsetX;
             this.#transY += offsetY;
-            this.checkBoundary();
-            this.clipImages(); // 根据位移后的图像实时裁切图像
+            this.#checkBoundary();
+            this.#clipImages(); // 根据位移后的图像实时裁切图像
         };
         return false;
     }
 
     /** 重置容器视口尺寸 */
-    resetViewport() {
+    #resetViewport() {
         this.#viewport = this.#container.getBoundingClientRect();
     }
 
     /** 重置图像 */
-    resetImages() {
+    #resetImages() {
         this.#transX = 0;
         this.#transY = 0;
         this.#scale = 1;
-        this.transformImages();
-        this.clipImages();
-        this.resetViewport();
+        this.#transformImages();
+        this.#clipImages();
+        this.#resetViewport();
     }
 
     /** 检查位移边界 */
-    checkBoundary() {
+    #checkBoundary() {
         const img = this.#leftImage;
         const fitScale = Math.min(img.clientWidth / img.naturalWidth, img.clientHeight / img.naturalHeight) || 1;
         const renderW = img.naturalWidth * fitScale * this.#scale;
@@ -264,7 +264,7 @@ class ImageComparator {
                 outOfBounds = true;
             }
         }
-        if (outOfBounds) this.transformImages();
+        if (outOfBounds) this.#transformImages();
     }
 
     /** 缩放图像 */
@@ -275,13 +275,13 @@ class ImageComparator {
         const step = e.wheelDelta > 0 ? this.#scaleStep : 0 - this.#scaleStep;
         this.#scale *= 1 + step;
         this.#scale = Math.max(1, Math.min(this.#scale, this.#maxScale));
-        this.transformImages();
-        this.checkBoundary();
-        this.clipImages(); // 根据缩放后的图像实时裁切图像
+        this.#transformImages();
+        this.#checkBoundary();
+        this.#clipImages(); // 根据缩放后的图像实时裁切图像
     }
 
     /** 裁切图像 */
-    clipImages(sliderX) {
+    #clipImages(sliderX) {
         if (sliderX === undefined) {
             const sliderRect = this.#slider.getBoundingClientRect();
             sliderX = sliderRect.x + sliderRect.width / 2;
@@ -293,13 +293,13 @@ class ImageComparator {
     }
 
     /** 转换图像 */
-    transformImages(x, y, s) {
+    #transformImages(x, y, s) {
         const t = `translate(${x ?? this.#transX}px, ${y ?? this.#transY}px) scale(${s ?? this.#scale})`;
         for (const img of [this.#leftImage, this.#rightImage]) img.style.transform = t;
     }
 
     /** 创建滑动条 */
-    createSlider() {
+    #createSlider() {
         this.#slider = document.createElement("div");
         this.#slider.className = "slider-handle";
         this.#slider.style.left = `${this.#sliderPosition}%`;
@@ -307,7 +307,7 @@ class ImageComparator {
         circle.className = "slider-circle";
         this.#slider.append(circle);
         this.#container.append(this.#slider);
-        this.clipImages();
+        this.#clipImages();
 
         // 拖动滑动条事件
         this.#slider.onpointerdown = (e) => {
@@ -322,7 +322,7 @@ class ImageComparator {
                 pos = Math.max(0, Math.min(100, pos));
                 this.#slider.style.left = `${pos}%`;
                 // 设置图像裁切位置
-                this.clipImages(e.clientX);
+                this.#clipImages(e.clientX);
             };
 
             document.onpointerup = () => {
@@ -335,11 +335,11 @@ class ImageComparator {
     }
 
     /** 创建最大化图标 */
-    createMaximizeIcon() {
+    #createMaximizeIcon() {
         this.#maximizeIcon = document.createElement("div");
         this.#maximizeIcon.className = "maximized-icon";
         this.#maximizeIcon.innerHTML = this.#iconMaximize;
-        this.#maximizeIcon.onclick = () => this.toggleMaximize();
+        this.#maximizeIcon.onclick = () => this.#toggleMaximize();
         this.#container.append(this.#maximizeIcon);
     }
 }
