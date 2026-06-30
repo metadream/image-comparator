@@ -1,0 +1,28 @@
+{
+  "name": "@metadream/image-comparator",
+  "version": "1.0.4",
+  "description": "A lightweight, zero-dependency image comparison slider with zoom and pan support",
+  "main": "image-comparator.min.js",
+  "files": [
+    "image-comparator.js",
+    "image-comparator.min.js"
+  ],
+  "keywords": [
+    "image",
+    "comparison",
+    "slider",
+    "compare",
+    "before-after",
+    "zoom",
+    "pan"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metadream/image-comparator.git"
+  },
+  "homepage": "https://metadream.github.io/image-comparator",
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -20,7 +20,7 @@ https://metadream.github.io/image-comparator
 ## Quick Start
 
 ```html
-<script src="image-comparator.js"></script>
+<script src="https://unpkg.com/@metadream/image-comparator"></script>
 
 <div class="image-comparator">
   <img class="left-image" src="before.jpg">
