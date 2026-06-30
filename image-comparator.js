@@ -26,11 +26,11 @@ class ImageComparator {
         this.container = typeof target === "string" ? document.querySelector(target) : target;
         this.leftImage = this.container.querySelector("img.left-image");
         this.rightImage = this.container.querySelector("img.right-image");
-        this.hideMaximizeIcon = options.hideMaximizeIcon === true;
+        this.showMaximizeIcon = options.showMaximizeIcon === true;
         this.sliderPosition = options.sliderPosition ?? 50;
 
         this.createSlider();
-        if (!this.hideMaximizeIcon) this.createMaximizeIcon();
+        if (this.showMaximizeIcon) this.createMaximizeIcon();
         this.container.onpointerdown = (e) => this.dragImages(e);
         this.container.onwheel = (e) => this.scaleImages(e);
 
