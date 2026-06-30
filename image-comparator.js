@@ -9,25 +9,31 @@
  * </script>
  */
 class ImageComparator {
-
     static MAX_SCALE = 20;
     static SCALE_STEP = 0.2;
     transX = 0;
     transY = 0;
     scale = 1;
 
+    static injectStyles() {
+        const style = document.createElement("style");
+        style.textContent = ImageComparator.inlineStyles;
+        document.head.append(style);
+    }
+
     constructor(target) {
-        this.container = typeof target === 'string' ? document.querySelector(target) : target;
-        this.leftImage = this.container.querySelector('img.left-image');
-        this.rightImage = this.container.querySelector('img.right-image');
+        ImageComparator.injectStyles();
+        this.container = typeof target === "string" ? document.querySelector(target) : target;
+        this.leftImage = this.container.querySelector("img.left-image");
+        this.rightImage = this.container.querySelector("img.right-image");
 
         this.createSlider();
         this.createMaximizeIcon();
-        this.container.onpointerdown = e => this.dragImages(e);
-        this.container.onwheel = e => this.scaleImages(e);
+        this.container.onpointerdown = (e) => this.dragImages(e);
+        this.container.onwheel = (e) => this.scaleImages(e);
 
         // 容器自适应图像高度
-        this.leftImage.addEventListener('load', () => {
+        this.leftImage.addEventListener("load", () => {
             const img = this.leftImage;
             const aspectRatio = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 0;
             this.container.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
@@ -40,9 +46,8 @@ class ImageComparator {
         });
 
         // 监听退出全屏按键
-        window.addEventListener("keyup", e => {
-            if (e.key === 'Escape' &&
-                this.container.classList.contains("maximized")) {
+        window.addEventListener("keyup", (e) => {
+            if (e.key === "Escape" && this.container.classList.contains("maximized")) {
                 this.toggleMaximize();
             }
         });
@@ -50,8 +55,8 @@ class ImageComparator {
 
     /** 切换最大化 */
     toggleMaximize() {
-        this.container.classList.toggle('maximized');
-        this.maximizeIcon.innerHTML = this.container.classList.contains('maximized')
+        this.container.classList.toggle("maximized");
+        this.maximizeIcon.innerHTML = this.container.classList.contains("maximized")
             ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5m5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5M0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5m10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0z"/></svg>'
             : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5M.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5m15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5"/></svg>';
         this.resetImages();
@@ -70,8 +75,8 @@ class ImageComparator {
             offsetX = e.clientX - startX;
             offsetY = e.clientY - startY;
             this.transformImages(this.transX + offsetX, this.transY + offsetY, null);
-            this.clipImages();  // 根据位移后的图像实时裁切图像
-        }
+            this.clipImages(); // 根据位移后的图像实时裁切图像
+        };
 
         document.onpointerup = () => {
             document.onpointermove = null;
@@ -80,7 +85,7 @@ class ImageComparator {
             this.transX += offsetX;
             this.transY += offsetY;
             this.checkBoundary();
-            this.clipImages();  // 根据位移后的图像实时裁切图像
+            this.clipImages(); // 根据位移后的图像实时裁切图像
         };
         return false;
     }
@@ -145,11 +150,11 @@ class ImageComparator {
         e.preventDefault();
         // 缩放图像
         const step = e.wheelDelta > 0 ? ImageComparator.SCALE_STEP : 0 - ImageComparator.SCALE_STEP;
-        this.scale *= (1 + step);
+        this.scale *= 1 + step;
         this.scale = Math.max(1, Math.min(this.scale, ImageComparator.MAX_SCALE));
         this.transformImages();
         this.checkBoundary();
-        this.clipImages();  // 根据缩放后的图像实时裁切图像
+        this.clipImages(); // 根据缩放后的图像实时裁切图像
     }
 
     /** 裁切图像 */
@@ -176,17 +181,17 @@ class ImageComparator {
 
     /** 创建滑动条 */
     createSlider() {
-        this.slider = document.createElement('div');
-        this.slider.className = 'slider-handle';
+        this.slider = document.createElement("div");
+        this.slider.className = "slider-handle";
         this.container.append(this.slider);
 
         // 拖动滑动条事件
-        this.slider.onpointerdown = e => {
+        this.slider.onpointerdown = (e) => {
             if (e.button !== 0) return;
-            e.stopPropagation();  // 防止冒泡
+            e.stopPropagation(); // 防止冒泡
 
-            document.body.style.cursor = 'ew-resize';
-            document.onpointermove = e => {
+            document.body.style.cursor = "ew-resize";
+            document.onpointermove = (e) => {
                 // 设置滑动条位置
                 const rect = this.container.getBoundingClientRect();
                 let pos = ((e.clientX - rect.x) / rect.width) * 100;
@@ -194,23 +199,105 @@ class ImageComparator {
                 this.slider.style.left = `${pos}%`;
                 // 设置图像裁切位置
                 this.clipImages(e.clientX);
-            }
+            };
 
             document.onpointerup = () => {
                 document.onpointermove = null;
                 document.onpointerup = null;
-                document.body.style.cursor = '';
+                document.body.style.cursor = "";
             };
             return false;
-        }
+        };
     }
 
     /** 创建最大化图标 */
     createMaximizeIcon() {
-        this.maximizeIcon = document.createElement('div');
-        this.maximizeIcon.className = 'maximized-icon';
-        this.maximizeIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5M.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5m15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5"/></svg>';
+        this.maximizeIcon = document.createElement("div");
+        this.maximizeIcon.className = "maximized-icon";
+        this.maximizeIcon.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5M.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5m15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5"/></svg>';
         this.maximizeIcon.onclick = () => this.toggleMaximize();
         this.container.append(this.maximizeIcon);
     }
 }
+
+ImageComparator.inlineStyles = `
+.image-comparator * {
+    box-sizing: border-box;
+}
+.image-comparator {
+    position: relative;
+    background: #f6f6f6;
+    height: 0;
+    padding-bottom: 66.67%;
+    overflow: hidden;
+    user-select: none;
+}
+.image-comparator > img {
+    position: absolute;
+    width: 100%;
+    -webkit-user-drag: none;
+}
+.image-comparator .left-image {
+    clip-path: inset(0 50% 0 0);
+}
+.image-comparator .right-image {
+    clip-path: inset(0 0 0 50%);
+}
+.image-comparator.maximized {
+    position: fixed;
+    z-index: 999;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding-bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, .7);
+}
+.image-comparator.maximized > img {
+    height: 100%;
+    object-fit: contain;
+}
+.image-comparator .maximized-icon {
+    position: absolute;
+    z-index: 998;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    background: rgba(0, 0, 0, .7);
+    border-radius: 5px;
+    padding: 6px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .2s;
+}
+.image-comparator .maximized-icon > svg {
+    fill: #fff;
+}
+.image-comparator:hover .maximized-icon {
+    opacity: 1 !important;
+}
+.image-comparator .slider-handle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1px;
+    height: 100%;
+    background: #fff;
+    cursor: ew-resize;
+    opacity: .8;
+}
+.image-comparator .slider-handle:before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 50px;
+    background: #fff;
+}`;
