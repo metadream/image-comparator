@@ -15,6 +15,7 @@ class ImageComparator {
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="m21 3-7 7"></path><path d="m3 21 7-7"></path><path d="M9 21H3v-6"></path></svg>';
     #iconRestore =
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 10 7-7"></path><path d="M20 10h-6V4"></path><path d="m3 21 7-7"></path><path d="M4 14h6v6"></path></svg>';
+
     #inlineStyles = `
 .image-comparator * {
     box-sizing: border-box;
@@ -251,18 +252,21 @@ class ImageComparator {
         }
 
         let outOfBounds = false;
-        for (const { val, upper, lower } of [
-            { val: "transX", upper: "x1", lower: "x2" },
-            { val: "transY", upper: "y1", lower: "y2" },
-        ]) {
-            if (this[val] > bound[upper]) {
-                this[val] = bound[upper];
-                outOfBounds = true;
-            }
-            if (this[val] < bound[lower]) {
-                this[val] = bound[lower];
-                outOfBounds = true;
-            }
+        if (this.#transX > bound.x1) {
+            this.#transX = bound.x1;
+            outOfBounds = true;
+        }
+        if (this.#transX < bound.x2) {
+            this.#transX = bound.x2;
+            outOfBounds = true;
+        }
+        if (this.#transY > bound.y1) {
+            this.#transY = bound.y1;
+            outOfBounds = true;
+        }
+        if (this.#transY < bound.y2) {
+            this.#transY = bound.y2;
+            outOfBounds = true;
         }
         if (outOfBounds) this.#transformImages();
     }
