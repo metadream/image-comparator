@@ -9,8 +9,6 @@
  * </script>
  */
 class ImageComparator {
-    static MAX_SCALE = 20;
-    static SCALE_STEP = 0.2;
     transX = 0;
     transY = 0;
     scale = 1;
@@ -28,6 +26,8 @@ class ImageComparator {
         this.rightImage = this.container.querySelector("img.right-image");
         this.showMaximizeIcon = options.showMaximizeIcon === true;
         this.sliderPosition = options.sliderPosition ?? 50;
+        this.maxScale = options.maxScale ?? 20;
+        this.scaleStep = options.scaleStep ?? 0.2;
 
         this.createSlider();
         if (this.showMaximizeIcon) this.createMaximizeIcon();
@@ -151,9 +151,9 @@ class ImageComparator {
         // 防止页面滚动条跟随滚动
         e.preventDefault();
         // 缩放图像
-        const step = e.wheelDelta > 0 ? ImageComparator.SCALE_STEP : 0 - ImageComparator.SCALE_STEP;
+        const step = e.wheelDelta > 0 ? this.scaleStep : 0 - this.scaleStep;
         this.scale *= 1 + step;
-        this.scale = Math.max(1, Math.min(this.scale, ImageComparator.MAX_SCALE));
+        this.scale = Math.max(1, Math.min(this.scale, this.maxScale));
         this.transformImages();
         this.checkBoundary();
         this.clipImages(); // 根据缩放后的图像实时裁切图像
