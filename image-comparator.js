@@ -21,14 +21,16 @@ class ImageComparator {
         document.head.append(style);
     }
 
-    constructor(target) {
+    constructor(target, options = {}) {
         ImageComparator.injectStyles();
         this.container = typeof target === "string" ? document.querySelector(target) : target;
         this.leftImage = this.container.querySelector("img.left-image");
         this.rightImage = this.container.querySelector("img.right-image");
+        this.hideMaximizeIcon = options.hideMaximizeIcon === true;
+        this.sliderPosition = options.sliderPosition ?? 50;
 
         this.createSlider();
-        this.createMaximizeIcon();
+        if (!this.hideMaximizeIcon) this.createMaximizeIcon();
         this.container.onpointerdown = (e) => this.dragImages(e);
         this.container.onwheel = (e) => this.scaleImages(e);
 
@@ -183,7 +185,9 @@ class ImageComparator {
     createSlider() {
         this.slider = document.createElement("div");
         this.slider.className = "slider-handle";
+        this.slider.style.left = `${this.sliderPosition}%`;
         this.container.append(this.slider);
+        this.clipImages();
 
         // 拖动滑动条事件
         this.slider.onpointerdown = (e) => {
