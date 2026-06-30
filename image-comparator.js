@@ -24,6 +24,7 @@ class ImageComparator {
         this.container = typeof target === "string" ? document.querySelector(target) : target;
         this.leftImage = this.container.querySelector("img.left-image");
         this.rightImage = this.container.querySelector("img.right-image");
+
         this.showMaximizeIcon = options.showMaximizeIcon === true;
         this.sliderPosition = options.sliderPosition ?? 50;
         this.maxScale = options.maxScale ?? 20;
