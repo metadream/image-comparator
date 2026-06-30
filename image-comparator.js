@@ -163,7 +163,7 @@ class ImageComparator {
     clipImages(sliderX) {
         if (!sliderX) {
             const sliderRect = this.slider.getBoundingClientRect();
-            sliderX = sliderRect.x;
+            sliderX = sliderRect.x + sliderRect.width / 2;
         }
         const imgRect = this.leftImage.getBoundingClientRect();
         const clipPos = ((sliderX - imgRect.x) / imgRect.width) * 100;
@@ -186,6 +186,9 @@ class ImageComparator {
         this.slider = document.createElement("div");
         this.slider.className = "slider-handle";
         this.slider.style.left = `${this.sliderPosition}%`;
+        const circle = document.createElement("div");
+        circle.className = "slider-circle";
+        this.slider.append(circle);
         this.container.append(this.slider);
         this.clipImages();
 
@@ -286,22 +289,41 @@ ImageComparator.inlineStyles = `
 }
 .image-comparator .slider-handle {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 1px;
-    height: 100%;
-    background: #fff;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    margin-left: -20px;
     cursor: ew-resize;
-    opacity: .8;
 }
-.image-comparator .slider-handle:before {
+.image-comparator .slider-handle::before {
     content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 100%;
+    background: rgba(255,255,255,.7);
+    clip-path: polygon(
+        0% 0%, 100% 0%,
+        100% calc(50% - 18px),
+        0% calc(50% - 18px),
+        0% calc(50% + 18px),
+        100% calc(50% + 18px),
+        100% 100%, 0% 100%
+    );
+    pointer-events: none;
+}
+.image-comparator .slider-circle {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 10px;
-    height: 50px;
-    background: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: rgba(255,255,255,.5) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Cpath d='M14,12 L9,18 L14,24' stroke='%23fff' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M22,12 L27,18 L22,24' stroke='%23fff' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    pointer-events: none;
 }`;
