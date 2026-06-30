@@ -18,10 +18,13 @@ class ImageComparator {
     transY = 0;
     scale = 1;
 
+    static #injected = false;
     static injectStyles() {
+        if (ImageComparator.#injected) return;
         const style = document.createElement("style");
         style.textContent = ImageComparator.inlineStyles;
         document.head.append(style);
+        ImageComparator.#injected = true;
     }
 
     constructor(target, options = {}) {
@@ -137,25 +140,14 @@ class ImageComparator {
         }
 
         let outOfBounds = false;
-        if (this.transX > bound.x1) {
-            this.transX = bound.x1;
-            outOfBounds = true;
+        for (const { val, upper, lower } of [
+            { val: 'transX', upper: 'x1', lower: 'x2' },
+            { val: 'transY', upper: 'y1', lower: 'y2' }
+        ]) {
+            if (this[val] > bound[upper]) { this[val] = bound[upper]; outOfBounds = true; }
+            if (this[val] < bound[lower]) { this[val] = bound[lower]; outOfBounds = true; }
         }
-        if (this.transX < bound.x2) {
-            this.transX = bound.x2;
-            outOfBounds = true;
-        }
-        if (this.transY > bound.y1) {
-            this.transY = bound.y1;
-            outOfBounds = true;
-        }
-        if (this.transY < bound.y2) {
-            this.transY = bound.y2;
-            outOfBounds = true;
-        }
-        if (outOfBounds) {
-            this.transformImages();
-        }
+        if (outOfBounds) this.transformImages();
     }
 
     /** 缩放图像 */
@@ -173,7 +165,7 @@ class ImageComparator {
 
     /** 裁切图像 */
     clipImages(sliderX) {
-        if (!sliderX) {
+        if (sliderX === undefined) {
             const sliderRect = this.slider.getBoundingClientRect();
             sliderX = sliderRect.x + sliderRect.width / 2;
         }
@@ -185,12 +177,8 @@ class ImageComparator {
 
     /** 转换图像 */
     transformImages(x, y, s) {
-        this.leftImage.style.transform = `
-                translate(${x ?? this.transX}px, ${y ?? this.transY}px)
-                scale(${s ?? this.scale})`;
-        this.rightImage.style.transform = `
-                translate(${x ?? this.transX}px, ${y ?? this.transY}px)
-                scale(${s ?? this.scale})`;
+        const t = `translate(${x ?? this.transX}px, ${y ?? this.transY}px) scale(${s ?? this.scale})`;
+        for (const img of [this.leftImage, this.rightImage]) img.style.transform = t;
     }
 
     /** 创建滑动条 */
