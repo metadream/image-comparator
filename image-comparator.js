@@ -9,225 +9,13 @@
  * </script>
  */
 class ImageComparator {
-    static ICON_MAXIMIZE =
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="m21 3-7 7"></path><path d="m3 21 7-7"></path><path d="M9 21H3v-6"></path></svg>';
-    static ICON_RESTORE =
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 10 7-7"></path><path d="M20 10h-6V4"></path><path d="m3 21 7-7"></path><path d="M4 14h6v6"></path></svg>';
-
-    transX = 0;
-    transY = 0;
-    scale = 1;
-
     static #injected = false;
-    static injectStyles() {
-        if (ImageComparator.#injected) return;
-        const style = document.createElement("style");
-        style.textContent = ImageComparator.inlineStyles;
-        document.head.append(style);
-        ImageComparator.#injected = true;
-    }
 
-    constructor(target, options = {}) {
-        ImageComparator.injectStyles();
-        this.container = typeof target === "string" ? document.querySelector(target) : target;
-        this.leftImage = this.container.querySelector("img.left-image");
-        this.rightImage = this.container.querySelector("img.right-image");
-
-        this.showMaximizeIcon = options.showMaximizeIcon === true;
-        this.sliderPosition = options.sliderPosition ?? 50;
-        this.maxScale = options.maxScale ?? 20;
-        this.scaleStep = options.scaleStep ?? 0.2;
-
-        this.createSlider();
-        if (this.showMaximizeIcon) this.createMaximizeIcon();
-        this.container.onpointerdown = (e) => this.dragImages(e);
-        this.container.onwheel = (e) => this.scaleImages(e);
-
-        // 容器自适应图像高度
-        this.leftImage.addEventListener("load", () => {
-            const img = this.leftImage;
-            const aspectRatio = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 0;
-            this.container.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
-            this.resetViewport();
-        });
-        if (this.leftImage.complete) {
-            this.leftImage.dispatchEvent(new Event("load"));
-        }
-
-        // 重置图像位移数据
-        this.resetViewport();
-        window.addEventListener("resize", () => {
-            this.resetImages();
-        });
-
-        // 监听退出全屏按键
-        window.addEventListener("keyup", (e) => {
-            if (e.key === "Escape" && this.container.classList.contains("maximized")) {
-                this.toggleMaximize();
-            }
-        });
-    }
-
-    /** 切换最大化 */
-    toggleMaximize() {
-        this.container.classList.toggle("maximized");
-        this.maximizeIcon.innerHTML = this.container.classList.contains("maximized")
-            ? ImageComparator.ICON_RESTORE
-            : ImageComparator.ICON_MAXIMIZE;
-        this.resetImages();
-    }
-
-    /** 拖动图像 */
-    dragImages(e) {
-        if (e.button !== 0) return;
-        let startX = e.clientX;
-        let startY = e.clientY;
-        let offsetX = 0;
-        let offsetY = 0;
-        this.container.style.cursor = "grabbing";
-
-        document.onpointermove = (e) => {
-            offsetX = e.clientX - startX;
-            offsetY = e.clientY - startY;
-            this.transformImages(this.transX + offsetX, this.transY + offsetY, null);
-            this.clipImages(); // 根据位移后的图像实时裁切图像
-        };
-
-        document.onpointerup = () => {
-            document.onpointermove = null;
-            document.onpointerup = null;
-            this.container.style.cursor = "default";
-            this.transX += offsetX;
-            this.transY += offsetY;
-            this.checkBoundary();
-            this.clipImages(); // 根据位移后的图像实时裁切图像
-        };
-        return false;
-    }
-
-    /** 重置容器视口尺寸 */
-    resetViewport() {
-        this.viewport = this.container.getBoundingClientRect();
-    }
-
-    /** 重置图像 */
-    resetImages() {
-        this.transX = 0;
-        this.transY = 0;
-        this.scale = 1;
-        this.transformImages();
-        this.clipImages();
-        this.resetViewport();
-    }
-
-    /** 检查位移边界 */
-    checkBoundary() {
-        const img = this.leftImage;
-        const fitScale = Math.min(img.clientWidth / img.naturalWidth, img.clientHeight / img.naturalHeight) || 1;
-        const renderW = img.naturalWidth * fitScale * this.scale;
-        const renderH = img.naturalHeight * fitScale * this.scale;
-        const cx = this.viewport.width / 2;
-        const cy = this.viewport.height / 2;
-        const bound = { x1: 0, x2: 0, y1: 0, y2: 0 };
-
-        if (renderW > this.viewport.width) {
-            bound.x1 = renderW / 2 - cx;
-            bound.x2 = bound.x1 - (renderW - this.viewport.width);
-        }
-        if (renderH > this.viewport.height) {
-            bound.y1 = renderH / 2 - cy;
-            bound.y2 = bound.y1 - (renderH - this.viewport.height);
-        }
-
-        let outOfBounds = false;
-        for (const { val, upper, lower } of [
-            { val: 'transX', upper: 'x1', lower: 'x2' },
-            { val: 'transY', upper: 'y1', lower: 'y2' }
-        ]) {
-            if (this[val] > bound[upper]) { this[val] = bound[upper]; outOfBounds = true; }
-            if (this[val] < bound[lower]) { this[val] = bound[lower]; outOfBounds = true; }
-        }
-        if (outOfBounds) this.transformImages();
-    }
-
-    /** 缩放图像 */
-    scaleImages(e) {
-        // 防止页面滚动条跟随滚动
-        e.preventDefault();
-        // 缩放图像
-        const step = e.wheelDelta > 0 ? this.scaleStep : 0 - this.scaleStep;
-        this.scale *= 1 + step;
-        this.scale = Math.max(1, Math.min(this.scale, this.maxScale));
-        this.transformImages();
-        this.checkBoundary();
-        this.clipImages(); // 根据缩放后的图像实时裁切图像
-    }
-
-    /** 裁切图像 */
-    clipImages(sliderX) {
-        if (sliderX === undefined) {
-            const sliderRect = this.slider.getBoundingClientRect();
-            sliderX = sliderRect.x + sliderRect.width / 2;
-        }
-        const imgRect = this.leftImage.getBoundingClientRect();
-        const clipPos = ((sliderX - imgRect.x) / imgRect.width) * 100;
-        this.leftImage.style.clipPath = `inset(0 ${100 - clipPos}% 0 0)`;
-        this.rightImage.style.clipPath = `inset(0 0 0 ${clipPos}%)`;
-    }
-
-    /** 转换图像 */
-    transformImages(x, y, s) {
-        const t = `translate(${x ?? this.transX}px, ${y ?? this.transY}px) scale(${s ?? this.scale})`;
-        for (const img of [this.leftImage, this.rightImage]) img.style.transform = t;
-    }
-
-    /** 创建滑动条 */
-    createSlider() {
-        this.slider = document.createElement("div");
-        this.slider.className = "slider-handle";
-        this.slider.style.left = `${this.sliderPosition}%`;
-        const circle = document.createElement("div");
-        circle.className = "slider-circle";
-        this.slider.append(circle);
-        this.container.append(this.slider);
-        this.clipImages();
-
-        // 拖动滑动条事件
-        this.slider.onpointerdown = (e) => {
-            if (e.button !== 0) return;
-            e.stopPropagation(); // 防止冒泡
-
-            document.body.style.cursor = "ew-resize";
-            document.onpointermove = (e) => {
-                // 设置滑动条位置
-                const rect = this.container.getBoundingClientRect();
-                let pos = ((e.clientX - rect.x) / rect.width) * 100;
-                pos = Math.max(0, Math.min(100, pos));
-                this.slider.style.left = `${pos}%`;
-                // 设置图像裁切位置
-                this.clipImages(e.clientX);
-            };
-
-            document.onpointerup = () => {
-                document.onpointermove = null;
-                document.onpointerup = null;
-                document.body.style.cursor = "";
-            };
-            return false;
-        };
-    }
-
-    /** 创建最大化图标 */
-    createMaximizeIcon() {
-        this.maximizeIcon = document.createElement("div");
-        this.maximizeIcon.className = "maximized-icon";
-        this.maximizeIcon.innerHTML = ImageComparator.ICON_MAXIMIZE;
-        this.maximizeIcon.onclick = () => this.toggleMaximize();
-        this.container.append(this.maximizeIcon);
-    }
-}
-
-ImageComparator.inlineStyles = `
+    #iconMaximize =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="m21 3-7 7"></path><path d="m3 21 7-7"></path><path d="M9 21H3v-6"></path></svg>';
+    #iconRestore =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 10 7-7"></path><path d="M20 10h-6V4"></path><path d="m3 21 7-7"></path><path d="M4 14h6v6"></path></svg>';
+    #inlineStyles = `
 .image-comparator * {
     box-sizing: border-box;
 }
@@ -327,3 +115,231 @@ ImageComparator.inlineStyles = `
     box-shadow: 0 2px 8px rgba(0,0,0,.2);
     pointer-events: none;
 }`;
+
+    #transX = 0;
+    #transY = 0;
+    #scale = 1;
+    #container;
+    #leftImage;
+    #rightImage;
+    #showMaximizeIcon;
+    #sliderPosition;
+    #maxScale;
+    #scaleStep;
+    #slider;
+    #maximizeIcon;
+    #viewport;
+
+    #injectStyles() {
+        if (ImageComparator.#injected) return;
+        const style = document.createElement("style");
+        style.textContent = this.#inlineStyles;
+        document.head.append(style);
+        ImageComparator.#injected = true;
+    }
+
+    constructor(target, options = {}) {
+        this.#injectStyles();
+        this.#container = typeof target === "string" ? document.querySelector(target) : target;
+        this.#leftImage = this.#container.querySelector("img.left-image");
+        this.#rightImage = this.#container.querySelector("img.right-image");
+
+        this.#showMaximizeIcon = options.showMaximizeIcon === true;
+        this.#sliderPosition = options.sliderPosition ?? 50;
+        this.#maxScale = options.maxScale ?? 20;
+        this.#scaleStep = options.scaleStep ?? 0.2;
+
+        this.createSlider();
+        if (this.#showMaximizeIcon) this.createMaximizeIcon();
+        this.#container.onpointerdown = (e) => this.dragImages(e);
+        this.#container.onwheel = (e) => this.#scaleImages(e);
+
+        // 容器自适应图像高度
+        this.#leftImage.addEventListener("load", () => {
+            const img = this.#leftImage;
+            const aspectRatio = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 0;
+            this.#container.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
+            this.resetViewport();
+        });
+        if (this.#leftImage.complete) {
+            this.#leftImage.dispatchEvent(new Event("load"));
+        }
+
+        // 重置图像位移数据
+        this.resetViewport();
+        window.addEventListener("resize", () => {
+            this.resetImages();
+        });
+
+        // 监听退出全屏按键
+        window.addEventListener("keyup", (e) => {
+            if (e.key === "Escape" && this.#container.classList.contains("maximized")) {
+                this.toggleMaximize();
+            }
+        });
+    }
+
+    /** 切换最大化 */
+    toggleMaximize() {
+        this.#container.classList.toggle("maximized");
+        this.#maximizeIcon.innerHTML = this.#container.classList.contains("maximized")
+            ? this.#iconRestore
+            : this.#iconMaximize;
+        this.resetImages();
+    }
+
+    /** 拖动图像 */
+    dragImages(e) {
+        if (e.button !== 0) return;
+        let startX = e.clientX;
+        let startY = e.clientY;
+        let offsetX = 0;
+        let offsetY = 0;
+        this.#container.style.cursor = "grabbing";
+
+        document.onpointermove = (e) => {
+            offsetX = e.clientX - startX;
+            offsetY = e.clientY - startY;
+            this.transformImages(this.#transX + offsetX, this.#transY + offsetY, null);
+            this.clipImages(); // 根据位移后的图像实时裁切图像
+        };
+
+        document.onpointerup = () => {
+            document.onpointermove = null;
+            document.onpointerup = null;
+            this.#container.style.cursor = "default";
+            this.#transX += offsetX;
+            this.#transY += offsetY;
+            this.checkBoundary();
+            this.clipImages(); // 根据位移后的图像实时裁切图像
+        };
+        return false;
+    }
+
+    /** 重置容器视口尺寸 */
+    resetViewport() {
+        this.#viewport = this.#container.getBoundingClientRect();
+    }
+
+    /** 重置图像 */
+    resetImages() {
+        this.#transX = 0;
+        this.#transY = 0;
+        this.#scale = 1;
+        this.transformImages();
+        this.clipImages();
+        this.resetViewport();
+    }
+
+    /** 检查位移边界 */
+    checkBoundary() {
+        const img = this.#leftImage;
+        const fitScale = Math.min(img.clientWidth / img.naturalWidth, img.clientHeight / img.naturalHeight) || 1;
+        const renderW = img.naturalWidth * fitScale * this.#scale;
+        const renderH = img.naturalHeight * fitScale * this.#scale;
+        const cx = this.#viewport.width / 2;
+        const cy = this.#viewport.height / 2;
+        const bound = { x1: 0, x2: 0, y1: 0, y2: 0 };
+
+        if (renderW > this.#viewport.width) {
+            bound.x1 = renderW / 2 - cx;
+            bound.x2 = bound.x1 - (renderW - this.#viewport.width);
+        }
+        if (renderH > this.#viewport.height) {
+            bound.y1 = renderH / 2 - cy;
+            bound.y2 = bound.y1 - (renderH - this.#viewport.height);
+        }
+
+        let outOfBounds = false;
+        for (const { val, upper, lower } of [
+            { val: "transX", upper: "x1", lower: "x2" },
+            { val: "transY", upper: "y1", lower: "y2" },
+        ]) {
+            if (this[val] > bound[upper]) {
+                this[val] = bound[upper];
+                outOfBounds = true;
+            }
+            if (this[val] < bound[lower]) {
+                this[val] = bound[lower];
+                outOfBounds = true;
+            }
+        }
+        if (outOfBounds) this.transformImages();
+    }
+
+    /** 缩放图像 */
+    #scaleImages(e) {
+        // 防止页面滚动条跟随滚动
+        e.preventDefault();
+        // 缩放图像
+        const step = e.wheelDelta > 0 ? this.#scaleStep : 0 - this.#scaleStep;
+        this.#scale *= 1 + step;
+        this.#scale = Math.max(1, Math.min(this.#scale, this.#maxScale));
+        this.transformImages();
+        this.checkBoundary();
+        this.clipImages(); // 根据缩放后的图像实时裁切图像
+    }
+
+    /** 裁切图像 */
+    clipImages(sliderX) {
+        if (sliderX === undefined) {
+            const sliderRect = this.#slider.getBoundingClientRect();
+            sliderX = sliderRect.x + sliderRect.width / 2;
+        }
+        const imgRect = this.#leftImage.getBoundingClientRect();
+        const clipPos = ((sliderX - imgRect.x) / imgRect.width) * 100;
+        this.#leftImage.style.clipPath = `inset(0 ${100 - clipPos}% 0 0)`;
+        this.#rightImage.style.clipPath = `inset(0 0 0 ${clipPos}%)`;
+    }
+
+    /** 转换图像 */
+    transformImages(x, y, s) {
+        const t = `translate(${x ?? this.#transX}px, ${y ?? this.#transY}px) scale(${s ?? this.#scale})`;
+        for (const img of [this.#leftImage, this.#rightImage]) img.style.transform = t;
+    }
+
+    /** 创建滑动条 */
+    createSlider() {
+        this.#slider = document.createElement("div");
+        this.#slider.className = "slider-handle";
+        this.#slider.style.left = `${this.#sliderPosition}%`;
+        const circle = document.createElement("div");
+        circle.className = "slider-circle";
+        this.#slider.append(circle);
+        this.#container.append(this.#slider);
+        this.clipImages();
+
+        // 拖动滑动条事件
+        this.#slider.onpointerdown = (e) => {
+            if (e.button !== 0) return;
+            e.stopPropagation(); // 防止冒泡
+
+            document.body.style.cursor = "ew-resize";
+            document.onpointermove = (e) => {
+                // 设置滑动条位置
+                const rect = this.#container.getBoundingClientRect();
+                let pos = ((e.clientX - rect.x) / rect.width) * 100;
+                pos = Math.max(0, Math.min(100, pos));
+                this.#slider.style.left = `${pos}%`;
+                // 设置图像裁切位置
+                this.clipImages(e.clientX);
+            };
+
+            document.onpointerup = () => {
+                document.onpointermove = null;
+                document.onpointerup = null;
+                document.body.style.cursor = "";
+            };
+            return false;
+        };
+    }
+
+    /** 创建最大化图标 */
+    createMaximizeIcon() {
+        this.#maximizeIcon = document.createElement("div");
+        this.#maximizeIcon.className = "maximized-icon";
+        this.#maximizeIcon.innerHTML = this.#iconMaximize;
+        this.#maximizeIcon.onclick = () => this.toggleMaximize();
+        this.#container.append(this.#maximizeIcon);
+    }
+}
