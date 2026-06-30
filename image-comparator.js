@@ -9,6 +9,11 @@
  * </script>
  */
 class ImageComparator {
+    static ICON_MAXIMIZE =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="m21 3-7 7"></path><path d="m3 21 7-7"></path><path d="M9 21H3v-6"></path></svg>';
+    static ICON_RESTORE =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 10 7-7"></path><path d="M20 10h-6V4"></path><path d="m3 21 7-7"></path><path d="M4 14h6v6"></path></svg>';
+
     transX = 0;
     transY = 0;
     scale = 1;
@@ -60,8 +65,8 @@ class ImageComparator {
     toggleMaximize() {
         this.container.classList.toggle("maximized");
         this.maximizeIcon.innerHTML = this.container.classList.contains("maximized")
-            ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minimize2 lucide-minimize-2 h-4 w-4" aria-hidden="true"><path d="m14 10 7-7"></path><path d="M20 10h-6V4"></path><path d="m3 21 7-7"></path><path d="M4 14h6v6"></path></svg>'
-            : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="m21 3-7 7"></path><path d="m3 21 7-7"></path><path d="M9 21H3v-6"></path></svg>';
+            ? ImageComparator.ICON_RESTORE
+            : ImageComparator.ICON_MAXIMIZE;
         this.resetImages();
     }
 
@@ -222,8 +227,7 @@ class ImageComparator {
     createMaximizeIcon() {
         this.maximizeIcon = document.createElement("div");
         this.maximizeIcon.className = "maximized-icon";
-        this.maximizeIcon.innerHTML =
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="m21 3-7 7"></path><path d="m3 21 7-7"></path><path d="M9 21H3v-6"></path></svg>';
+        this.maximizeIcon.innerHTML = ImageComparator.ICON_MAXIMIZE;
         this.maximizeIcon.onclick = () => this.toggleMaximize();
         this.container.append(this.maximizeIcon);
     }
