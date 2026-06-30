@@ -165,10 +165,10 @@ class ImageComparator {
             const sliderRect = this.slider.getBoundingClientRect();
             sliderX = sliderRect.x + sliderRect.width / 2;
         }
-        const imgRect = this.leftImage.getBoundingClientRect();
-        const clipPos = ((sliderX - imgRect.x) / imgRect.width) * 100;
-        this.leftImage.style.clipPath = `inset(0 ${100 - clipPos}% 0 0)`;
-        this.rightImage.style.clipPath = `inset(0 0 0 ${clipPos}%)`;
+        const containerRect = this.container.getBoundingClientRect();
+        const clipPx = sliderX - containerRect.x;
+        this.leftImage.style.clip = `rect(0, ${clipPx}px, auto, 0)`;
+        this.rightImage.style.clip = `rect(0, auto, auto, ${clipPx}px)`;
     }
 
     /** 转换图像 */
@@ -245,12 +245,7 @@ ImageComparator.inlineStyles = `
     width: 100%;
     -webkit-user-drag: none;
 }
-.image-comparator .left-image {
-    clip-path: inset(0 50% 0 0);
-}
-.image-comparator .right-image {
-    clip-path: inset(0 0 0 50%);
-}
+
 .image-comparator.maximized {
     position: fixed;
     z-index: 999;
