@@ -22,7 +22,7 @@ class ImageComparator {
 }
 .image-comparator {
     position: relative;
-    background: #f6f6f6;
+    background: var(--ic-bg, #f6f6f6);
     height: 0;
     padding-bottom: 66.67%;
     overflow: hidden;
@@ -32,6 +32,19 @@ class ImageComparator {
     position: absolute;
     width: 100%;
     -webkit-user-drag: none;
+}
+/* fit: "fill" 模式：由容器决定尺寸，不再用 padding-bottom 撑高度 */
+.image-comparator.fit-fill {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    padding-bottom: 0 !important;
+}
+.image-comparator.fit-fill > img {
+    inset: 0;
+    height: 100%;
+    object-fit: contain;
 }
 .image-comparator .left-image {
     clip-path: inset(0 50% 0 0);
@@ -63,15 +76,15 @@ class ImageComparator {
     right: 10px;
     width: 28px;
     height: 28px;
-    background: rgba(255, 255, 255, .3);
+    background: var(--ic-icon-bg, rgba(255, 255, 255, .3));
     border-radius: 5px;
     padding: 5px;
     cursor: pointer;
-    opacity: 0;
+    opacity: var(--ic-icon-opacity, 0);
     transition: opacity .2s;
 }
 .image-comparator .maximized-icon > svg {
-    color: #fff;
+    color: var(--ic-icon-color, #fff);
 }
 .image-comparator:hover .maximized-icon {
     opacity: 1 !important;
@@ -130,6 +143,12 @@ class ImageComparator {
     #slider;
     #maximizeIcon;
     #viewport;
+    #fit = "aspect";
+    #destroyed = false;
+    #onImageLoad;
+    #onResize;
+    #onKeyDown;
+    #originalPaddingBottom;
 
     #injectStyles() {
         if (ImageComparator.#injected) return;
@@ -149,35 +168,53 @@ class ImageComparator {
         this.#sliderPosition = options.sliderPosition ?? 50;
         this.#maxScale = options.maxScale ?? 20;
         this.#scaleStep = options.scaleStep ?? 0.2;
+        this.#fit = options.fit === "fill" ? "fill" : "aspect";
+        this.#originalPaddingBottom = this.#container.style.paddingBottom;
+        if (this.#fit === "fill") this.#container.classList.add("fit-fill");
 
         this.#createSlider();
         if (this.#showMaximizeIcon) this.#createMaximizeIcon();
         this.#container.onpointerdown = (e) => this.#dragImages(e);
         this.#container.onwheel = (e) => this.#scaleImages(e);
 
-        // 容器自适应图像高度
-        this.#leftImage.addEventListener("load", () => {
-            const img = this.#leftImage;
-            const aspectRatio = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 0;
-            this.#container.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
+        // 直接同步尺寸，不派发合成 load：业务方常在该图片的 onload 里初始化组件，
+        // 派发合成事件会造成重入递归。
+        this.#onImageLoad = () => {
+            this.#syncAspectRatio();
             this.#resetViewport();
-        });
-        if (this.#leftImage.complete) {
-            this.#leftImage.dispatchEvent(new Event("load"));
-        }
+        };
+        this.#leftImage.addEventListener("load", this.#onImageLoad);
+        if (this.#leftImage.complete) this.#syncAspectRatio();
 
-        // 重置图像位移数据
         this.#resetViewport();
-        window.addEventListener("resize", () => {
-            this.#resetImages();
-        });
-
-        // 监听退出全屏按键
-        window.addEventListener("keyup", (e) => {
+        this.#onResize = () => this.#resetImages();
+        this.#onKeyDown = (e) => {
             if (e.key === "Escape" && this.#container.classList.contains("maximized")) {
                 this.#toggleMaximize();
             }
-        });
+        };
+        window.addEventListener("resize", this.#onResize);
+        window.addEventListener("keyup", this.#onKeyDown);
+    }
+
+    /** 销毁实例：移除注入元素、解绑监听、还原样式 */
+    destroy() {
+        if (this.#destroyed) return;
+        this.#destroyed = true;
+        this.#leftImage.removeEventListener("load", this.#onImageLoad);
+        window.removeEventListener("resize", this.#onResize);
+        window.removeEventListener("keyup", this.#onKeyDown);
+        this.#container.onpointerdown = null;
+        this.#container.onwheel = null;
+        this.#slider?.remove();
+        this.#maximizeIcon?.remove();
+        this.#container.style.cursor = "";
+        this.#container.style.paddingBottom = this.#originalPaddingBottom;
+        this.#container.classList.remove("maximized", "fit-fill");
+        for (const img of [this.#leftImage, this.#rightImage]) {
+            img.style.clipPath = "";
+            img.style.transform = "";
+        }
     }
 
     /** 切换最大化 */
@@ -215,6 +252,14 @@ class ImageComparator {
             this.#clipImages(); // 根据位移后的图像实时裁切图像
         };
         return false;
+    }
+
+    /** 根据左图宽高比同步容器尺寸（fit: "fill" 时由容器决定尺寸） */
+    #syncAspectRatio() {
+        if (this.#destroyed || this.#fit === "fill") return;
+        const img = this.#leftImage;
+        const aspectRatio = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 0;
+        if (aspectRatio > 0) this.#container.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
     }
 
     /** 重置容器视口尺寸 */

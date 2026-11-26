@@ -42,6 +42,7 @@ new ImageComparator('.image-comparator', {
   sliderPosition: 50,
   maxScale: 20,
   scaleStep: 0.2,
+  fit: 'aspect',
 });
 ```
 
@@ -51,6 +52,29 @@ new ImageComparator('.image-comparator', {
 | `sliderPosition` | `number` | `50` | Initial slider position (percentage, 0–100) |
 | `maxScale` | `number` | `20` | Maximum zoom level |
 | `scaleStep` | `number` | `0.2` | Zoom step per scroll event |
+| `fit` | `'aspect' \| 'fill'` | `'aspect'` | `'aspect'` sizes the container from the left image ratio; `'fill'` makes the container fill its positioned parent instead |
+
+### Theming
+
+The maximize button can be themed with CSS custom properties on the container:
+
+```css
+.image-comparator {
+  --ic-icon-color: #1f2937;
+  --ic-icon-bg: rgba(255, 255, 255, 0.92);
+  --ic-icon-opacity: 1;
+  --ic-bg: transparent;
+}
+```
+
+### Cleanup
+
+Call `destroy()` to remove injected elements, unbind window listeners and restore inline styles:
+
+```js
+const comparator = new ImageComparator(el);
+comparator.destroy();
+```
 
 ## Browser Support
 
